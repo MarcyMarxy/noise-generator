@@ -1,0 +1,172 @@
+/* Style for the body */
+body {
+    background-color: #fff;
+    color: #212529;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    text-align: left;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+/* Style for the header(h1) */
+h1 {
+    text-align: left;
+    padding-left: 15px;
+    margin-bottom: 30px;
+    color: #333;
+}
+
+/* Style for the form */
+form {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.form-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    flex: 1;
+    margin-right: 15px;
+}
+
+.form-group:last-child {
+    margin-right: 0;
+}
+
+#duration-value {
+    display: inline-block;
+    margin-left: 10px;
+    font-weight: normal;
+}
+
+input[type="text"],
+input[type="number"],
+span {
+    line-height: 1.8;
+    width: 10%;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.8rem;
+}
+
+select,
+option {
+    line-height: 1.8;
+    width: 16%;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.8rem;
+}
+
+select:hover,
+input[type="text"]:hover,
+input[type="number"]:hover {
+    background-color: #f5f5f5;
+    transition: color 2s ease-in-out, background-color 0.15s ease-in-out;
+}
+
+/* Style for lock-disabled elements */
+.locked {
+    background-color: #e9ecef !important;
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+/* Style for the buttons */
+.buttons-container {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    align-items: auto;
+}
+
+button {
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s ease-in-out;
+}
+
+#generate {
+    background: #28a745;
+    padding: 10px 20px;
+    margin-right: auto;
+}
+
+#dice-button {
+    background: #4d3366;
+    padding: 10px 10px;
+}
+
+#generate:hover {
+    background: #218838;
+}
+
+#dice-button:hover {
+    background: #333366;
+}
+
+/* Style for the audioPlayer */
+#audioPlayer {
+    width: 60%;
+    margin-top: 20px;
+    margin-left: auto;
+    margin-right: auto;
+    display: table;
+}
+
+/* Style for the plots */
+.plots-container {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: 30px;
+}
+
+.plots {
+    flex: 1;
+    margin: 5px;
+    box-sizing: border-box;
+}
+
+/* Style for the error message */
+#error-message {
+    max-width: 650px;
+    text-align: center;
+    color: #891010;
+    margin-top: 10px;
+    font-weight: bold;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 15px;
+    padding-right: 15px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Style for the footer */
+footer {
+    margin-bottom: auto;
+    padding: 2rem 1rem;
+    text-align: center;
+    bottom: 0;
+    left: auto;
+    width: 100%;
+}
+
+h5 {
+    padding-left: 15px;
+    padding-right: 15px;
+    color: #333;
+}

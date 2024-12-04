@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500&display=swap" rel="stylesheet">
+        <link href="/static/styles.css" rel="stylesheet">
+        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <title>Noise Generator</title>
+    </head>
+
+    <body>
+        <h1>Noise Generator</h1>
+
+        <form>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="noiseType">Noise Type</label>
+                    <select class="form-control" id="noiseType">
+                        <option value="uniform">Uniform</option>
+                        <option value="gaussian">Gaussian</option>
+                    </select>
+
+                    <label for="mean">Mean</label>
+                    <input type="number" class="form-control locked" id="mean" min="-1.0" max="1.0" step="0.1" value="0.5">
+                    <label for="std">STD</label>
+                    <input type="number" class="form-control locked" id="std" min="0.1" max="2" step="0.1" value="0.1">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="duration">Duration</label>
+                    <input type="range" class="form-control" id="duration" min="0.1" max="5" step="0.1" value="0.5">
+                    <span id="duration-value">0.5</span>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="lfoFreq">LFO Frequency</label>
+                    <input type="number" class="form-control" id="lfoFreq" min="0" max="100" step="0.5" value="0">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="attack">ADSR Attack</label>
+                    <input type="number" id="attack" min="0" max="5" step="0.1" value="0.01">
+                    <label for="decay">Decay</label>
+                    <input type="number" id="decay" min="0" max="5" step="0.1" value="0.1">
+                    <label for="sustain">Sustain</label>
+                    <input type="number" id="sustain" min="0" max="1" step="0.1" value="0.7">
+                    <label for="release">Release</label>
+                    <input type="number" id="release" min="0" max="5" step="0.1" value="0.3">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="buttons-container">
+                    <button type="button" class="btn btn-primary" id="generate">Generate</button>
+                    <button type="button" id="dice-button">Randomize</button>
+                </div>
+            </div>
+        </form>
+
+        <div div class="alert alert-warning" role="alert" id="error-message"></div>
+
+        <audio id="audioPlayer" controls muted>
+            Your browser does not support audio playback.
+        </audio>
+
+        <div class="plots-container">
+            <div class="plots" id="waveform"></div>
+            <div class="plots" id="spectrum"></div>
+        </div>
+        <div class="plots" id="scatter"></div>
+
+        <!-- chatgpt helped me to write the following script -->
+        <script>
+            document.getElementById("generate").addEventListener("click", () => {
+                const noiseType = document.getElementById("noiseType").value;
+                const duration = document.getElementById("duration").value;
+                const mean = document.getElementById("mean").value;
+                const std = document.getElementById("std").value;
+                const lfoFreq = document.getElementById("lfoFreq").value;
+                const adsrParams = [
+                    document.getElementById("attack").value,
+                    document.getElementById("decay").value,
+                    document.getElementById("sustain").value,
+                    document.getElementById("release").value
+                ];
+
+                fetch("/generate", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ noiseType, duration, mean, std, lfoFreq, adsrParams })
+                })
+
+                .then(response => response.json())
+                .then(data => {
+                    const audioBase64 = data.audioBase64;
+                    const waveform = data.waveform;
+                    const spectrum = data.spectrum;
+                    const scatter = data.scatter;
+
+                    const audioPlayer = document.getElementById("audioPlayer");
+                    audioPlayer.src = "data:audio/wav;base64," + audioBase64;
+
+                    plotWaveform(waveform);
+                    plotSpectrum(spectrum);
+                    plotScatter(scatter);
+
+                });
+            });
+
+            function plotWaveform(data) {
+                const x = data.x;
+                const y = data.y;
+
+                Plotly.newPlot('waveform', [{
+                    x: x,
+                    y: y,
+                    type: 'scatter',
+                    marker: { color: '#5f5f5f' } // Set the color to grey
+                }], {
+                    title: 'Waveform',
+                    xaxis: { title: 'Time' },
+                    yaxis: { title: 'Amplitude' }
+                });
+            }
+
+            function plotSpectrum(data) {
+                const x = data.x;
+                const y = data.y;
+
+                Plotly.newPlot('spectrum', [{
+                    x: x,
+                    y: y,
+                    type: 'scatter',
+                    marker: { color: '#5f5f5f' }
+                }], {
+                    title: 'Spectrum',
+                    xaxis: { title: 'Frequency' },
+                    yaxis: { title: 'Amplitude' }
+                });
+            }
+
+            function plotScatter(data) {
+                const x = data.x;
+                const y = data.y;
+                const colors = data.colors;
+                const labels = data.labels;
+                const filenames = data.filenames;
+                const categories = ["noise", "sfx", "music"];
+                const traces = [];
+
+                // Add trace for the generated noise first
+                traces.push({
+                    x: [x[x.length - 1]],
+                    y: [y[y.length - 1]],
+                    type: 'scatter',
+                    mode: 'markers',
+                    marker: {
+                        symbol: 'diamond',
+                        color: colors[colors.length - 1],
+                        size: 10
+                    },
+                    text: [filenames[filenames.length - 1]],
+                    hoverinfo: 'text',
+                    name: 'generated noise' // Add a name for the legend
+                });
+
+                // Add traces for other categories
+                categories.forEach(category => {
+                    const indices = labels.map((label, index) => label === category ? index : -1).filter(index => index !== -1);
+                    traces.push({
+                        x: indices.map(index => x[index]),
+                        y: indices.map(index => y[index]),
+                        type: 'scatter',
+                        mode: 'markers',
+                        marker: {
+                            color: colors[indices[0]],
+                            size: 10
+                        },
+                        text: indices.map(index => filenames[index]),
+                        hoverinfo: 'text',
+                        name: category // Add category name for the legend
+                    });
+                });
+
+                const layout = {
+                    title: 'Feature Comparison',
+                    xaxis: { title: 'Log Attack Time' },
+                    yaxis: { title: 'Spectral Centroid' },
+                    showlegend: true, // Enable legend
+                    // legend: {
+                        // title: { text: 'Categories' }
+                    // }
+                };
+
+                Plotly.newPlot('scatter', traces, layout);
+            }
+
+            $(document).ready(function() {
+                // Lock/disable Mean and STD for Uniform noise
+                $("#noiseType").change(function() {
+                    const type = $(this).val();
+                    if (type === "uniform") {
+                        $("#mean, #std").addClass("locked");
+                    } else {
+                        $("#mean, #std").removeClass("locked");
+                    }
+                });
+
+                // Display duration value next to slider
+                $("#duration").on("input", function() {
+                    $("#duration-value").text($(this).val());
+                });
+
+                // Validate ADSR sum < duration
+                function validateADSR() {
+                    const attack = parseFloat($("#attack").val());
+                    const decay = parseFloat($("#decay").val());
+                    const release = parseFloat($("#release").val());
+                    const duration = parseFloat($("#duration").val());
+                    const tolerance = 1e-6;
+
+                    console.log("Attack:", attack, "Decay:", decay, "Release:", release, "Duration:", duration);
+
+                    if (attack + decay + release >= duration + tolerance) {
+                        $("#error-message").text("Error: Attack + Decay + Release must be less than Duration!");
+                        return false;
+                    } else {
+                        $("#error-message").text(""); // Clear error message
+                        return true;
+                    }
+                }
+
+                // Trigger validation on input change
+                $("#attack, #decay, #release, #duration").on("input", function() {
+                    validateADSR();
+                });
+
+                // Randomize all values
+                $("#dice-button").click(function() {
+                    const noiseTypes = ["uniform", "gaussian"];
+                    $("#noiseType").val(noiseTypes[Math.floor(Math.random() * noiseTypes.length)]).trigger("change");
+
+                    $("#mean").val((Math.random() * 2 - 1).toFixed(2));
+                    $("#std").val((Math.random() * (2 - 0.1) + 0.1).toFixed(2));
+                    $("#duration").val((Math.random() * 4.9 + 0.1).toFixed(2)).trigger("input");
+                    $("#lfoFreq").val((Math.random() * 100).toFixed(2));
+
+                    const duration = parseFloat($("#duration").val());
+                    const tolerance = 1e-6;
+
+                    let attack, decay, release;
+                    do {
+                        attack = (Math.random() * duration * 0.5).toFixed(2);
+                        decay = (Math.random() * duration * 0.3).toFixed(2);
+                        release = (Math.random() * duration * 0.2).toFixed(2);
+                        console.log("Generated values - Attack:", attack, "Decay:", decay, "Release:", release, "Total:", parseFloat(attack) + parseFloat(decay) + parseFloat(release));
+                    } while (parseFloat(attack) + parseFloat(decay) + parseFloat(release) >= duration + tolerance);
+
+                    $("#attack").val(parseFloat(attack));
+                    $("#decay").val(parseFloat(decay));
+                    $("#release").val(parseFloat(release));
+                    $("#sustain").val((Math.random() * 1).toFixed(2));
+                });
+
+                // Prevent form submission if validation fails
+                $("form").on("submit", function(e) {
+                    if (!validateADSR()) {
+                        e.preventDefault();
+                    }
+                });
+            });
+        </script>
+    </body>
+
+    <footer>
+        <h5>Make some noise.</h5>
+    </footer>

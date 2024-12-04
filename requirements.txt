@@ -1,0 +1,12 @@
+os
+matplotlib.pyplot
+soundfile
+datetime
+numpy
+essentia.standard
+json
+flask
+numpy
+wave
+io
+base64
